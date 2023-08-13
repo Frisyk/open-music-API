@@ -4,7 +4,7 @@ const routes = (handler) => [
     path: '/playlists',
     handler: (request, h) => handler.postPlaylistsHandler(request, h),
     options: {
-      auth: 'notesapp_jwt',
+      auth: 'musicapp_jwt',
     },
   },
   {
@@ -12,7 +12,7 @@ const routes = (handler) => [
     path: '/playlists',
     handler: (request) => handler.getPlaylistsHandler(request),
     options: {
-      auth: 'notesapp_jwt',
+      auth: 'musicapp_jwt',
     },
   },
   {
@@ -20,7 +20,7 @@ const routes = (handler) => [
     path: '/playlists/{id}',
     handler: (request) => handler.deletePlaylistsByIdHandler(request),
     options: {
-      auth: 'notesapp_jwt',
+      auth: 'musicapp_jwt',
     },
   },
 ];

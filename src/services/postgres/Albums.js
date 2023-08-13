@@ -46,6 +46,16 @@ class AlbumsService {
     return result.rows.map(mapDBToModel)[0];
   }
 
+  async getSongsByAlbumId(albumId) {
+    const query = {
+      text: 'SELECT id, title, performer FROM songs WHERE albumid = $1',
+      values: [albumId],
+    };
+    const result = await this._pool.query(query);
+
+    return result.rows;
+  }
+
   async editAlbumById(id, { name, year }) {
     const query = {
       text: 'UPDATE albums SET name = $1, year = $2 WHERE id = $3 RETURNING id',

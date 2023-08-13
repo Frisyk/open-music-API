@@ -18,7 +18,6 @@ class PlaylistsHandler {
       name,
       owner: id,
     });
-
     const response = h.response({
       status: 'success',
       message: 'Playlists berhasil ditambahkan',
@@ -42,11 +41,11 @@ class PlaylistsHandler {
   }
 
   async deletePlaylistsByIdHandler(request) {
-    const { playlistId } = request.params;
+    const { id } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
-    await this._service.verifyPlaylistOwner(playlistId, credentialId);
-    await this._service.deletePlaylistById(playlistId);
+    await this._service.verifyPlaylistOwner(id, credentialId);
+    await this._service.deletePlaylistsById(id);
 
     return {
       status: 'success',
