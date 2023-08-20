@@ -6,8 +6,9 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class PlaylistsService {
-  constructor() {
+  constructor(collaborationsService) {
     this._pool = new Pool();
+    this._collaborationsService = collaborationsService;
   }
 
   async addPlaylists({ name, owner }) {
@@ -29,7 +30,11 @@ class PlaylistsService {
 
   async getPlaylists(owner) {
     const query = {
-      text: 'SELECT playlists.id, playlists.name, users.username FROM playlists INNER JOIN users ON playlists.owner = users.id WHERE playlists.owner = $1',
+      text: `SELECT playlists.id, playlists.name, users.username 
+      FROM playlists 
+      LEFT JOIN users ON playlists.owner = users.id 
+      LEFT JOIN collaborations ON collaborations.playlistid = playlists.id
+      WHERE playlists.owner = $1 OR collaborations.userid = $1`,
       values: [owner],
     };
     const result = await this._pool.query(query);
@@ -69,7 +74,6 @@ class PlaylistsService {
     };
 
     const result = await this._pool.query(query);
-
     if (!result.rowCount) {
       throw new NotFoundError('Playlist tidak ditemukan');
     }
@@ -78,6 +82,33 @@ class PlaylistsService {
     if (playlist.owner !== owner) {
       throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
     }
+  }
+
+  async verifyPlaylistAccess(playlistId, userId) {
+    try {
+      await this.verifyPlaylistOwner(playlistId, userId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      try {
+        await this._collaborationsService.verifyCollaborator(playlistId, userId);
+      } catch {
+        throw error;
+      }
+    }
+  }
+
+  async verifyUser(id) {
+    const query = {
+      text: 'SELECT * FROM users WHERE id = $1',
+      values: [id],
+    };
+    const result = await this._pool.query(query);
+    if (!result.rows.length) {
+      throw new NotFoundError('User tidak ditemukan');
+    }
+    return result.rows[0];
   }
 }
 

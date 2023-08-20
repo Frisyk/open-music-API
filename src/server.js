@@ -1,5 +1,5 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable no-console */
-// mengimpor dotenv dan menjalankan konfigurasinya
 require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
@@ -36,14 +36,25 @@ const playlistSongs = require('./api/playlistsongs');
 const PlaylistSongsService = require('./services/postgres/PlaylistSongsService');
 const PlaylistSongsValidator = require('./validator/playlistSongs');
 
+// collaborations
+const collaborations = require('./api/collaborations');
+const CollaborationsService = require('./services/postgres/CollaborationsService');
+const CollaborationsValidator = require('./validator/collaborations');
+
+// exports
+const _exports = require('./api/exports');
+const exportService = require('./services/rabbitmq/ProducerService');
+const ExportsValidator = require('./validator/export');
+
 const ClientError = require('./exceptions/ClientError');
 
 const init = async () => {
+  const collaborationsService = new CollaborationsService();
   const albumsService = new AlbumsService();
   const songsService = new SongsService();
   const usersService = new UsersService();
   const authenticationsService = new AuthenticationsService();
-  const playlistsService = new PlaylistsService();
+  const playlistsService = new PlaylistsService(collaborationsService);
   const playlistSongsService = new PlaylistSongsService();
 
   const server = Hapi.server({
@@ -124,6 +135,22 @@ const init = async () => {
         playlistSongsService,
         playlistsService,
         validator: PlaylistSongsValidator,
+      },
+    },
+    {
+      plugin: collaborations,
+      options: {
+        collaborationsService,
+        playlistsService,
+        validator: CollaborationsValidator,
+      },
+    },
+    {
+      plugin: _exports,
+      options: {
+        exportService,
+        playlistsService,
+        validator: ExportsValidator,
       },
     },
   ]);
