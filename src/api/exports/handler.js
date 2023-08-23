@@ -24,7 +24,6 @@ class ExportsHandler {
       targetEmail,
     };
 
-    console.log(message);
     await this._exportService.sendMessage(
       'export:playlists',
       JSON.stringify(message),
